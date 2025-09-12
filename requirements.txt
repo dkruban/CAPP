@@ -3,3 +3,4 @@ Flask-SocketIO
 pyngrok
 eventlet
 gunicorn
+python-dotenv
