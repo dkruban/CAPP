@@ -11,20 +11,20 @@ import threading
 import webbrowser
 from pyngrok import ngrok
 
-# Add these imports at the top
-import os
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
+# Try to load environment variables from .env file (for development)
+# Make it optional to avoid errors in production
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # python-dotenv is not installed, continue without it
+    pass
 
 app = Flask(__name__)
 # Use environment variable for SECRET_KEY with fallback
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'secret!')
-
 # Update the SocketIO initialization to use eventlet for production
 socketio = SocketIO(app, async_mode='eventlet')
-
 # File to store chat history
 CHAT_HISTORY_FILE = "chat_history.json"
 # Store chat history in memory
