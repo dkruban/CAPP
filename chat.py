@@ -24,7 +24,7 @@ app = Flask(__name__)
 # Use environment variable for SECRET_KEY with fallback
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'secret!')
 # Update the SocketIO initialization to use eventlet for production
-socketio = SocketIO(app, async_mode='eventlet')
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 # File to store chat history
 CHAT_HISTORY_FILE = "chat_history.json"
 # Store chat history in memory
