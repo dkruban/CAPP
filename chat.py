@@ -1,3 +1,8 @@
+# Apply eventlet monkey patch at the very beginning
+import eventlet
+eventlet.monkey_patch()
+
+# Now import the rest of the modules
 from flask import Flask, render_template_string, send_file, request
 from flask_socketio import SocketIO, send, emit
 import datetime
