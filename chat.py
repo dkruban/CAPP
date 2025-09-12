@@ -11,10 +11,19 @@ import threading
 import webbrowser
 from pyngrok import ngrok
 
+# Add these imports at the top
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-# Fixed: Explicitly set async_mode to 'threading' to avoid eventlet compatibility issues
-socketio = SocketIO(app, async_mode='threading')
+# Use environment variable for SECRET_KEY with fallback
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'secret!')
+
+# Update the SocketIO initialization to use eventlet for production
+socketio = SocketIO(app, async_mode='eventlet')
 
 # File to store chat history
 CHAT_HISTORY_FILE = "chat_history.json"
@@ -1533,15 +1542,16 @@ def handle_disconnect():
         del session_to_user[request.sid]
         emit("user_left", {"user": username}, broadcast=True)
         emit("online_users", online_users, broadcast=True)
+
+# Update the main block
 if __name__ == "__main__":
-    # Start ngrok tunnel
-    public_url = start_ngrok()
+    # Only start ngrok in development
+    if os.environ.get('ENVIRONMENT') != 'production':
+        public_url = start_ngrok()
+        if public_url:
+            print(f" * Public URL: {public_url}")
     
-    # Run the app
+    port = int(os.environ.get('PORT', 5000))
     print(" * Starting Flask-SocketIO server...")
-    print(" * Local URL: http://localhost:5000")
-    if public_url:
-        print(f" * Public URL: {public_url}")
-        print(" * Share this URL with others to access your chat app")
-    
-    socketio.run(app, host="0.0.0.0", port=5000)
+    print(f" * Local URL: http://localhost:{port}")
+    socketio.run(app, host="0.0.0.0", port=port)
