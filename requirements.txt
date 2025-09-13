@@ -4,3 +4,7 @@ pyngrok
 eventlet
 gunicorn
 python-dotenv
+authlib
+flask_session
+requests
+python-dotenv
