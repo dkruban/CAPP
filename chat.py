@@ -612,6 +612,14 @@ html = """
             animation: pulse 1.5s infinite;
         }
         
+        /* Ensure call button is visible */
+        #callBtn {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 10 !important;
+        }
+        
         .send-btn {
             background: var(--gradient);
             color: white;
@@ -2201,24 +2209,34 @@ html = """
             stopRecording();
         }
         
-        // Call button event handler
-        document.getElementById("callBtn").addEventListener("click", function() {
-            if (!username) {
-                username = document.getElementById("user").value;
-                if (!username) {
-                    showNotification("Please enter your name first!");
-                    return;
-                }
-                // Notify server that user is online
-                socket.emit("user_online", { user: username });
-            }
-            
-            if (isInCall) {
-                endCall();
+        // Call button event handler - Fixed with proper event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            const callBtn = document.getElementById("callBtn");
+            if (callBtn) {
+                console.log("Call button found, adding event listener");
+                callBtn.addEventListener("click", function() {
+                    console.log("Call button clicked!");
+                    
+                    if (!username) {
+                        username = document.getElementById("user").value;
+                        if (!username) {
+                            showNotification("Please enter your name first!");
+                            return;
+                        }
+                        // Notify server that user is online
+                        socket.emit("user_online", { user: username });
+                    }
+                    
+                    if (isInCall) {
+                        endCall();
+                    } else {
+                        // Show user select modal
+                        populateUserList();
+                        document.getElementById("userSelectModal").style.display = "flex";
+                    }
+                });
             } else {
-                // Show user select modal
-                populateUserList();
-                document.getElementById("userSelectModal").style.display = "flex";
+                console.error("Call button not found in DOM!");
             }
         });
         
