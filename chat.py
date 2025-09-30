@@ -1313,7 +1313,7 @@ html = """
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
                     </svg>
                 </button>
-                <button class="action-btn" id="callBtn" title="Voice Call">
+                <button class="action-btn" id="callBtn" title="Voice Call" onclick="handleCallButtonClick()">
                     <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                     </svg>
@@ -2209,36 +2209,28 @@ html = """
             stopRecording();
         }
         
-        // Call button event handler - Fixed with proper event listener
-        document.addEventListener('DOMContentLoaded', function() {
-            const callBtn = document.getElementById("callBtn");
-            if (callBtn) {
-                console.log("Call button found, adding event listener");
-                callBtn.addEventListener("click", function() {
-                    console.log("Call button clicked!");
-                    
-                    if (!username) {
-                        username = document.getElementById("user").value;
-                        if (!username) {
-                            showNotification("Please enter your name first!");
-                            return;
-                        }
-                        // Notify server that user is online
-                        socket.emit("user_online", { user: username });
-                    }
-                    
-                    if (isInCall) {
-                        endCall();
-                    } else {
-                        // Show user select modal
-                        populateUserList();
-                        document.getElementById("userSelectModal").style.display = "flex";
-                    }
-                });
-            } else {
-                console.error("Call button not found in DOM!");
+        // Call button event handler - Fixed with inline onclick
+        function handleCallButtonClick() {
+            console.log("Call button clicked!");
+            
+            if (!username) {
+                username = document.getElementById("user").value;
+                if (!username) {
+                    showNotification("Please enter your name first!");
+                    return;
+                }
+                // Notify server that user is online
+                socket.emit("user_online", { user: username });
             }
-        });
+            
+            if (isInCall) {
+                endCall();
+            } else {
+                // Show user select modal
+                populateUserList();
+                document.getElementById("userSelectModal").style.display = "flex";
+            }
+        }
         
         // Answer call button event handler
         document.getElementById("answerCallBtn").addEventListener("click", function() {
