@@ -83,7 +83,8 @@ html = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DK port</title>
+    <title>DK port - v2.0</title>
+    <meta name="version" content="v2.0 - Updated with Call Button">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         
@@ -618,6 +619,7 @@ html = """
             visibility: visible !important;
             opacity: 1 !important;
             z-index: 10 !important;
+            background: var(--call-gradient) !important;
         }
         
         .send-btn {
