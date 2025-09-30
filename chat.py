@@ -37,10 +37,6 @@ chat_history = []
 online_users = []
 # Added: Dictionary to track session IDs and usernames
 session_to_user = {}
-# Added: Dictionary to track active calls
-active_calls = {}
-# Added: Dictionary to map users to their call partners
-user_call_partner = {}
 
 # Load chat history from file if it exists
 def load_chat_history():
@@ -83,8 +79,7 @@ html = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DK port - v2.0</title>
-    <meta name="version" content="v2.0 - Updated with Call Button">
+    <title>DK port</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         
@@ -101,7 +96,6 @@ html = """
             --success: #2ecc71;
             --gradient: linear-gradient(135deg, #00a8ff, #2ecc71);
             --message-gradient: linear-gradient(135deg, #0097e6, #00a8ff);
-            --call-gradient: linear-gradient(135deg, #2ecc71, #27ae60);
         }
         
         * {
@@ -608,20 +602,6 @@ html = """
             animation: pulse 1.5s infinite;
         }
         
-        .action-btn.calling {
-            background: var(--call-gradient);
-            animation: pulse 1.5s infinite;
-        }
-        
-        /* Ensure call button is visible */
-        #callBtn {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            z-index: 10 !important;
-            background: var(--call-gradient) !important;
-        }
-        
         .send-btn {
             background: var(--gradient);
             color: white;
@@ -842,256 +822,6 @@ html = """
             display: none;
         }
         
-        /* Call UI */
-        .call-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .call-container {
-            width: 90%;
-            max-width: 400px;
-            background: var(--surface);
-            border-radius: 24px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 0.3s ease;
-        }
-        
-        .call-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            background: var(--gradient);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 48px;
-            color: white;
-        }
-        
-        .call-status {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .call-timer {
-            font-size: 18px;
-            color: var(--text-secondary);
-            margin-bottom: 30px;
-        }
-        
-        .call-actions {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-        
-        .call-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.2s ease;
-        }
-        
-        .call-btn.answer {
-            background: var(--success);
-            color: white;
-        }
-        
-        .call-btn.reject {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .call-btn.end {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .call-btn.mute {
-            background: var(--surface-light);
-            color: var(--text);
-        }
-        
-        .call-btn.muted {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .call-btn:hover {
-            transform: scale(1.1);
-        }
-        
-        .call-icon {
-            width: 24px;
-            height: 24px;
-        }
-        
-        .incoming-call-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .incoming-call-container {
-            width: 90%;
-            max-width: 400px;
-            background: var(--surface);
-            border-radius: 24px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 0.3s ease;
-        }
-        
-        .incoming-call-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            background: var(--gradient);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 48px;
-            color: white;
-        }
-        
-        .incoming-call-status {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .incoming-call-user {
-            font-size: 18px;
-            color: var(--text-secondary);
-            margin-bottom: 30px;
-        }
-        
-        .incoming-call-actions {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-        
-        .user-select-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .user-select-container {
-            width: 90%;
-            max-width: 400px;
-            background: var(--surface);
-            border-radius: 24px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 0.3s ease;
-        }
-        
-        .user-select-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        
-        .user-list {
-            max-height: 300px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-        }
-        
-        .user-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            background: var(--surface-light);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .user-item:hover {
-            background: var(--primary);
-            transform: translateY(-2px);
-        }
-        
-        .user-item-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 12px;
-            background: var(--gradient);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-weight: 600;
-        }
-        
-        .user-item-name {
-            flex: 1;
-            text-align: left;
-        }
-        
-        .user-item-status {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--success);
-        }
-        
-        .cancel-btn {
-            background: var(--surface-light);
-            color: var(--text);
-            border: none;
-            border-radius: 20px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.2s ease;
-        }
-        
-        .cancel-btn:hover {
-            background: #e74c3c;
-            color: white;
-        }
-        
         /* Light theme */
         body.light-theme {
             --background: #f5f7fa;
@@ -1159,12 +889,6 @@ html = """
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
         
-        body.light-theme .call-container,
-        body.light-theme .incoming-call-container,
-        body.light-theme .user-select-container {
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-        
         /* Responsive adjustments */
         @media (max-width: 480px) {
             .chat-container {
@@ -1226,40 +950,6 @@ html = """
                 max-width: 120px;
                 font-size: 10px;
             }
-            
-            .call-container,
-            .incoming-call-container,
-            .user-select-container {
-                width: 95%;
-                padding: 20px;
-            }
-            
-            .call-avatar,
-            .incoming-call-avatar {
-                width: 100px;
-                height: 100px;
-                font-size: 40px;
-            }
-            
-            .call-status,
-            .incoming-call-status {
-                font-size: 20px;
-            }
-            
-            .call-timer,
-            .incoming-call-user {
-                font-size: 16px;
-            }
-            
-            .call-btn {
-                width: 50px;
-                height: 50px;
-            }
-            
-            .call-icon {
-                width: 20px;
-                height: 20px;
-            }
         }
     </style>
 </head>
@@ -1315,11 +1005,6 @@ html = """
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
                     </svg>
                 </button>
-                <button class="action-btn" id="callBtn" title="Voice Call" onclick="handleCallButtonClick()">
-                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                    </svg>
-                </button>
                 <button class="action-btn" id="imageBtn" title="Share Image">
                     <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -1351,59 +1036,6 @@ html = """
         </button>
     </div>
     
-    <!-- Call Modal -->
-    <div class="call-modal" id="callModal">
-        <div class="call-container">
-            <div class="call-avatar" id="callAvatar">👤</div>
-            <div class="call-status" id="callStatus">Calling...</div>
-            <div class="call-timer" id="callTimer">00:00</div>
-            <div class="call-actions">
-                <button class="call-btn mute" id="muteBtn" title="Mute/Unmute">
-                    <svg class="call-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                    </svg>
-                </button>
-                <button class="call-btn end" id="endCallBtn" title="End Call">
-                    <svg class="call-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Incoming Call Modal -->
-    <div class="incoming-call-modal" id="incomingCallModal">
-        <div class="incoming-call-container">
-            <div class="incoming-call-avatar" id="incomingCallAvatar">👤</div>
-            <div class="incoming-call-status">Incoming Call</div>
-            <div class="incoming-call-user" id="incomingCallUser">User</div>
-            <div class="incoming-call-actions">
-                <button class="call-btn reject" id="rejectCallBtn" title="Reject">
-                    <svg class="call-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                <button class="call-btn answer" id="answerCallBtn" title="Answer">
-                    <svg class="call-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- User Select Modal -->
-    <div class="user-select-modal" id="userSelectModal">
-        <div class="user-select-container">
-            <div class="user-select-title">Select User to Call</div>
-            <div class="user-list" id="userList">
-                <!-- User list will be populated here -->
-            </div>
-            <button class="cancel-btn" id="cancelCallBtn">Cancel</button>
-        </div>
-    </div>
-    
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
         var socket = io();
@@ -1415,23 +1047,6 @@ html = """
         var isRecording = false;
         var mediaRecorder;
         var audioChunks = [];
-        
-        // WebRTC variables
-        var localStream;
-        var remoteStream;
-        var peerConnection;
-        var isInCall = false;
-        var isMuted = false;
-        var callTimer;
-        var callSeconds = 0;
-        var callPartner = "";
-        
-        // WebRTC configuration
-        const configuration = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' }
-            ]
-        };
         
         // Theme toggle
         document.getElementById("themeToggle").addEventListener("click", function() {
@@ -1466,13 +1081,6 @@ html = """
                 hour: '2-digit', 
                 minute: '2-digit' 
             });
-        }
-        
-        // Function to format call timer
-        function formatCallTimer(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
         
         // Function to add date separator
@@ -1515,12 +1123,6 @@ html = """
                         </button>
                     </div>
                 `;
-            } else if (msg.type === "call") {
-                const callIcon = msg.text.includes("started") ? "📞" : "📵";
-                messageContent = `<div style="display: flex; align-items: center; gap: 8px;">
-                    <span>${callIcon}</span>
-                    <span>${msg.text}</span>
-                </div>`;
             }
             
             bubble.innerHTML = `
@@ -1577,28 +1179,6 @@ html = """
             });
         }
         
-        // Function to populate user list for calling
-        function populateUserList() {
-            const userList = document.getElementById("userList");
-            userList.innerHTML = '';
-            
-            online_users.forEach(user => {
-                if (user !== username) {
-                    const userItem = document.createElement("div");
-                    userItem.className = "user-item";
-                    userItem.innerHTML = `
-                        <div class="user-item-avatar">${user.charAt(0).toUpperCase()}</div>
-                        <div class="user-item-name">${user}</div>
-                        <div class="user-item-status"></div>
-                    `;
-                    userItem.addEventListener("click", function() {
-                        initiateCall(user);
-                    });
-                    userList.appendChild(userItem);
-                }
-            });
-        }
-        
         // Function to download voice message
         function downloadVoice(dataUrl, filename) {
             const link = document.createElement('a');
@@ -1617,286 +1197,6 @@ html = """
             }
         }
         
-        // Function to show notification
-        function showNotification(message) {
-            var notification = document.createElement("div");
-            notification.style.position = "fixed";
-            notification.style.top = "20px";
-            notification.style.left = "50%";
-            notification.style.transform = "translateX(-50%)";
-            notification.style.background = "var(--primary)";
-            notification.style.color = "white";
-            notification.style.padding = "10px 20px";
-            notification.style.borderRadius = "20px";
-            notification.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
-            notification.style.zIndex = "1000";
-            notification.style.animation = "fadeInUp 0.3s ease";
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(function() {
-                notification.style.animation = "fadeInUp 0.3s ease reverse";
-                setTimeout(function() {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 2000);
-        }
-        
-        // WebRTC functions
-        async function initializeMedia() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                return localStream;
-            } catch (error) {
-                console.error('Error accessing media devices:', error);
-                showNotification("Could not access microphone");
-                return null;
-            }
-        }
-        
-        function createPeerConnection() {
-            try {
-                peerConnection = new RTCPeerConnection(configuration);
-                
-                // Add local stream to peer connection
-                if (localStream) {
-                    localStream.getTracks().forEach(track => {
-                        peerConnection.addTrack(track, localStream);
-                    });
-                }
-                
-                // Handle remote stream
-                peerConnection.ontrack = (event) => {
-                    remoteStream = event.streams[0];
-                    // Play remote audio
-                    const audio = new Audio();
-                    audio.srcObject = remoteStream;
-                    audio.play();
-                };
-                
-                // Handle ICE candidates
-                peerConnection.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        socket.emit('ice_candidate', {
-                            candidate: event.candidate,
-                            to: callPartner
-                        });
-                    }
-                };
-                
-                return peerConnection;
-            } catch (error) {
-                console.error('Error creating peer connection:', error);
-                return null;
-            }
-        }
-        
-        async function initiateCall(targetUser) {
-            if (isInCall) {
-                showNotification("You are already in a call");
-                return;
-            }
-            
-            callPartner = targetUser;
-            
-            // Initialize media
-            localStream = await initializeMedia();
-            if (!localStream) {
-                return;
-            }
-            
-            // Create peer connection
-            peerConnection = createPeerConnection();
-            if (!peerConnection) {
-                return;
-            }
-            
-            // Create offer
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-            
-            // Send offer to target user
-            socket.emit('call_offer', {
-                offer: offer,
-                to: targetUser,
-                from: username
-            });
-            
-            // Show call modal
-            document.getElementById("callModal").style.display = "flex";
-            document.getElementById("callStatus").textContent = `Calling ${targetUser}...`;
-            document.getElementById("callAvatar").textContent = targetUser.charAt(0).toUpperCase();
-            
-            // Start call timer
-            startCallTimer();
-            
-            // Add call message to chat
-            const now = new Date();
-            const messageId = "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-            socket.send({
-                id: messageId,
-                user: username, 
-                text: `Voice call started with ${targetUser}`,
-                datetime: now.toISOString(),
-                type: "call",
-                status: "sent"
-            });
-        }
-        
-        async function acceptCall() {
-            // Initialize media
-            localStream = await initializeMedia();
-            if (!localStream) {
-                return;
-            }
-            
-            // Create peer connection
-            peerConnection = createPeerConnection();
-            if (!peerConnection) {
-                return;
-            }
-            
-            // Hide incoming call modal
-            document.getElementById("incomingCallModal").style.display = "none";
-            
-            // Show call modal
-            document.getElementById("callModal").style.display = "flex";
-            document.getElementById("callStatus").textContent = `Connected with ${callPartner}`;
-            document.getElementById("callAvatar").textContent = callPartner.charAt(0).toUpperCase();
-            
-            // Start call timer
-            startCallTimer();
-            
-            // Add call message to chat
-            const now = new Date();
-            const messageId = "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-            socket.send({
-                id: messageId,
-                user: username, 
-                text: `Voice call with ${callPartner} accepted`,
-                datetime: now.toISOString(),
-                type: "call",
-                status: "sent"
-            });
-        }
-        
-        function rejectCall() {
-            // Send reject signal
-            socket.emit('call_rejected', {
-                to: callPartner,
-                from: username
-            });
-            
-            // Hide incoming call modal
-            document.getElementById("incomingCallModal").style.display = "none";
-            
-            // Add call message to chat
-            const now = new Date();
-            const messageId = "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-            socket.send({
-                id: messageId,
-                user: username, 
-                text: `Voice call from ${callPartner} rejected`,
-                datetime: now.toISOString(),
-                type: "call",
-                status: "sent"
-            });
-            
-            callPartner = "";
-        }
-        
-        function endCall() {
-            // Stop local stream
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-            
-            // Close peer connection
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-            
-            // Send end call signal
-            if (callPartner) {
-                socket.emit('call_ended', {
-                    to: callPartner,
-                    from: username
-                });
-            }
-            
-            // Hide call modal
-            document.getElementById("callModal").style.display = "none";
-            
-            // Stop call timer
-            stopCallTimer();
-            
-            // Add call message to chat
-            if (callPartner) {
-                const now = new Date();
-                const messageId = "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-                socket.send({
-                    id: messageId,
-                    user: username, 
-                    text: `Voice call with ${callPartner} ended (${formatCallTimer(callSeconds)})`,
-                    datetime: now.toISOString(),
-                    type: "call",
-                    status: "sent"
-                });
-            }
-            
-            isInCall = false;
-            callPartner = "";
-            callSeconds = 0;
-        }
-        
-        function toggleMute() {
-            if (localStream) {
-                const audioTrack = localStream.getAudioTracks()[0];
-                if (audioTrack) {
-                    audioTrack.enabled = !audioTrack.enabled;
-                    isMuted = !audioTrack.enabled;
-                    
-                    // Update UI
-                    const muteBtn = document.getElementById("muteBtn");
-                    if (isMuted) {
-                        muteBtn.classList.add("muted");
-                        muteBtn.innerHTML = `
-                            <svg class="call-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
-                            </svg>
-                        `;
-                    } else {
-                        muteBtn.classList.remove("muted");
-                        muteBtn.innerHTML = `
-                            <svg class="call-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                            </svg>
-                        `;
-                    }
-                }
-            }
-        }
-        
-        function startCallTimer() {
-            callSeconds = 0;
-            isInCall = true;
-            document.getElementById("callBtn").classList.add("calling");
-            
-            callTimer = setInterval(() => {
-                callSeconds++;
-                document.getElementById("callTimer").textContent = formatCallTimer(callSeconds);
-            }, 1000);
-        }
-        
-        function stopCallTimer() {
-            clearInterval(callTimer);
-            document.getElementById("callBtn").classList.remove("calling");
-        }
-        
-        // Socket event handlers
         socket.on("connect", function() {
             // Request chat history when connected
             socket.emit("request_history");
@@ -1952,12 +1252,6 @@ html = """
             
             // Show notification
             showNotification(`${data.user} left the chat`);
-            
-            // End call if user was in call with the user who left
-            if (isInCall && callPartner === data.user) {
-                endCall();
-                showNotification(`${data.user} ended the call`);
-            }
         });
         
         socket.on("typing", function(data) {
@@ -1988,120 +1282,6 @@ html = """
             });
         });
         
-        // WebRTC Socket Event Handlers
-        socket.on("call_offer", async function(data) {
-            if (isInCall) {
-                // Reject call if already in a call
-                socket.emit('call_rejected', {
-                    to: data.from,
-                    from: username
-                });
-                return;
-            }
-            
-            callPartner = data.from;
-            
-            // Show incoming call modal
-            document.getElementById("incomingCallModal").style.display = "flex";
-            document.getElementById("incomingCallUser").textContent = data.from;
-            document.getElementById("incomingCallAvatar").textContent = data.from.charAt(0).toUpperCase();
-        });
-        
-        socket.on("call_answer", async function(data) {
-            if (!peerConnection) return;
-            
-            // Set remote description
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-            
-            // Update call status
-            document.getElementById("callStatus").textContent = `Connected with ${callPartner}`;
-        });
-        
-        socket.on("call_rejected", function(data) {
-            // Hide call modal
-            document.getElementById("callModal").style.display = "none";
-            
-            // Stop call timer
-            stopCallTimer();
-            
-            // Show notification
-            showNotification(`${data.from} rejected your call`);
-            
-            // Add call message to chat
-            const now = new Date();
-            const messageId = "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-            socket.send({
-                id: messageId,
-                user: username, 
-                text: `Voice call with ${data.from} rejected`,
-                datetime: now.toISOString(),
-                type: "call",
-                status: "sent"
-            });
-            
-            // Clean up
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-            
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-            
-            isInCall = false;
-            callPartner = "";
-        });
-        
-        socket.on("call_ended", function(data) {
-            // Hide call modal
-            document.getElementById("callModal").style.display = "none";
-            
-            // Stop call timer
-            stopCallTimer();
-            
-            // Show notification
-            showNotification(`${data.from} ended the call`);
-            
-            // Add call message to chat
-            const now = new Date();
-            const messageId = "msg_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-            socket.send({
-                id: messageId,
-                user: username, 
-                text: `Voice call with ${data.from} ended (${formatCallTimer(callSeconds)})`,
-                datetime: now.toISOString(),
-                type: "call",
-                status: "sent"
-            });
-            
-            // Clean up
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-            
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-            
-            isInCall = false;
-            callPartner = "";
-        });
-        
-        socket.on("ice_candidate", async function(data) {
-            if (!peerConnection) return;
-            
-            try {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-            } catch (error) {
-                console.error('Error adding ICE candidate:', error);
-            }
-        });
-        
-        // UI Event Handlers
         function sendMessage() {
             if (!username) {
                 username = document.getElementById("user").value;
@@ -2211,53 +1391,29 @@ html = """
             stopRecording();
         }
         
-        // Call button event handler - Fixed with inline onclick
-        function handleCallButtonClick() {
-            console.log("Call button clicked!");
+        function showNotification(message) {
+            var notification = document.createElement("div");
+            notification.style.position = "fixed";
+            notification.style.top = "20px";
+            notification.style.left = "50%";
+            notification.style.transform = "translateX(-50%)";
+            notification.style.background = "var(--primary)";
+            notification.style.color = "white";
+            notification.style.padding = "10px 20px";
+            notification.style.borderRadius = "20px";
+            notification.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
+            notification.style.zIndex = "1000";
+            notification.style.animation = "fadeInUp 0.3s ease";
+            notification.textContent = message;
+            document.body.appendChild(notification);
             
-            if (!username) {
-                username = document.getElementById("user").value;
-                if (!username) {
-                    showNotification("Please enter your name first!");
-                    return;
-                }
-                // Notify server that user is online
-                socket.emit("user_online", { user: username });
-            }
-            
-            if (isInCall) {
-                endCall();
-            } else {
-                // Show user select modal
-                populateUserList();
-                document.getElementById("userSelectModal").style.display = "flex";
-            }
+            setTimeout(function() {
+                notification.style.animation = "fadeInUp 0.3s ease reverse";
+                setTimeout(function() {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 2000);
         }
-        
-        // Answer call button event handler
-        document.getElementById("answerCallBtn").addEventListener("click", function() {
-            acceptCall();
-        });
-        
-        // Reject call button event handler
-        document.getElementById("rejectCallBtn").addEventListener("click", function() {
-            rejectCall();
-        });
-        
-        // End call button event handler
-        document.getElementById("endCallBtn").addEventListener("click", function() {
-            endCall();
-        });
-        
-        // Mute button event handler
-        document.getElementById("muteBtn").addEventListener("click", function() {
-            toggleMute();
-        });
-        
-        // Cancel call button event handler
-        document.getElementById("cancelCallBtn").addEventListener("click", function() {
-            document.getElementById("userSelectModal").style.display = "none";
-        });
         
         // Allow pressing Enter to send message
         document.getElementById("text").addEventListener("keypress", function(event) {
@@ -2322,7 +1478,6 @@ def download_file(filename):
     # This is a placeholder for file download functionality
     # In a real implementation, you would serve the actual file
     return "File download functionality would be implemented here"
-
 @socketio.on("message")
 def handleMessage(msg):
     # Add timestamp if not provided
@@ -2344,7 +1499,6 @@ def handleMessage(msg):
         socketio.sleep(1)  # Simulate network delay
         msg['status'] = 'delivered'
         emit("message_status_updated", msg, broadcast=True)
-
 @socketio.on("update_message_status")
 def update_message_status(data):
     # Find the message in history and update status
@@ -2358,22 +1512,18 @@ def update_message_status(data):
     
     # Broadcast status update
     emit("message_status_updated", data, broadcast=True)
-
 @socketio.on("request_history")
 def handle_history_request():
     # Send chat history to the requesting client
     emit("chat_history", chat_history)
-
 @socketio.on("request_users")
 def handle_users_request():
     # Send online users to the requesting client
     emit("online_users", online_users)
-
 @socketio.on("request_public_url")
 def handle_public_url_request():
     # Send public URL to the requesting client
     emit("public_url", app.config.get('PUBLIC_URL', ''))
-
 @socketio.on("user_online")
 def handle_user_online(data):
     user = data.get('user')
@@ -2383,87 +1533,9 @@ def handle_user_online(data):
         session_to_user[request.sid] = user
         emit("user_joined", data, broadcast=True)
         emit("online_users", online_users, broadcast=True)
-
 @socketio.on("typing")
 def handleTyping(data):
     socketio.emit("typing", data, broadcast=True)
-
-# WebRTC call event handlers
-@socketio.on("call_offer")
-def handle_call_offer(data):
-    target_user = data.get('to')
-    if target_user:
-        # Find the session ID of the target user
-        target_sid = None
-        for sid, user in session_to_user.items():
-            if user == target_user:
-                target_sid = sid
-                break
-        
-        if target_sid:
-            # Forward the offer to the target user
-            emit("call_offer", data, room=target_sid)
-
-@socketio.on("call_answer")
-def handle_call_answer(data):
-    target_user = data.get('to')
-    if target_user:
-        # Find the session ID of the target user
-        target_sid = None
-        for sid, user in session_to_user.items():
-            if user == target_user:
-                target_sid = sid
-                break
-        
-        if target_sid:
-            # Forward the answer to the target user
-            emit("call_answer", data, room=target_sid)
-
-@socketio.on("call_rejected")
-def handle_call_rejected(data):
-    target_user = data.get('to')
-    if target_user:
-        # Find the session ID of the target user
-        target_sid = None
-        for sid, user in session_to_user.items():
-            if user == target_user:
-                target_sid = sid
-                break
-        
-        if target_sid:
-            # Forward the rejection to the target user
-            emit("call_rejected", data, room=target_sid)
-
-@socketio.on("call_ended")
-def handle_call_ended(data):
-    target_user = data.get('to')
-    if target_user:
-        # Find the session ID of the target user
-        target_sid = None
-        for sid, user in session_to_user.items():
-            if user == target_user:
-                target_sid = sid
-                break
-        
-        if target_sid:
-            # Forward the end call signal to the target user
-            emit("call_ended", data, room=target_sid)
-
-@socketio.on("ice_candidate")
-def handle_ice_candidate(data):
-    target_user = data.get('to')
-    if target_user:
-        # Find the session ID of the target user
-        target_sid = None
-        for sid, user in session_to_user.items():
-            if user == target_user:
-                target_sid = sid
-                break
-        
-        if target_sid:
-            # Forward the ICE candidate to the target user
-            emit("ice_candidate", data, room=target_sid)
-
 @socketio.on("disconnect")
 def handle_disconnect():
     # Fixed: Properly handle user disconnect using session mapping
@@ -2475,23 +1547,6 @@ def handle_disconnect():
         del session_to_user[request.sid]
         emit("user_left", {"user": username}, broadcast=True)
         emit("online_users", online_users, broadcast=True)
-        
-        # Clean up any active calls
-        if username in user_call_partner:
-            partner = user_call_partner[username]
-            del user_call_partner[username]
-            if partner in user_call_partner and user_call_partner[partner] == username:
-                del user_call_partner[partner]
-                
-                # Notify the partner that the call ended
-                partner_sid = None
-                for sid, user in session_to_user.items():
-                    if user == partner:
-                        partner_sid = sid
-                        break
-                
-                if partner_sid:
-                    emit("call_ended", {"from": username}, room=partner_sid)
 
 # Update the main block
 if __name__ == "__main__":
