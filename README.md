@@ -1,13 +1,10 @@
-# Silent Port - Real-time Chat with Voice Calling
+# Silent Port - Real-time Chat with Voice Message
 
 A real-time chat application with WhatsApp-like voice calling functionality.
 
 ## Features
 - Real-time messaging
 - Voice messages
-- Image sharing
-- **Voice calling** (WebRTC-based)
-- Online user status
 - Chat history
 - Dark/Light theme
 
