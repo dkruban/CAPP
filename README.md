@@ -1,6 +1,6 @@
 # Silent Port - Real-time Chat with Voice Message
 
-A real-time chat application with WhatsApp-like voice calling functionality.
+A real-time chat application with WhatsApp-like voice record functionality.
 
 ## Features
 - Real-time messaging
